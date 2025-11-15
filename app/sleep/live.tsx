@@ -52,7 +52,7 @@ export default function LiveSession() {
 
   return (
     <View style={{ flex: 1, padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 20, fontWeight: '600' }}>Live Session</Text>
+      <Text style={{ fontSize: 20, fontWeight: '600' }}>Current Alarms</Text>
       <Text>Target: {new Date(config.targetTime).toLocaleTimeString()} window {config.windowMinutes}m</Text>
       <Text>Heart Rate: {hr ? hr.toFixed(0) : '—'} bpm</Text>
       <Text>Motion Magnitude: {motionMag ? motionMag.toFixed(2) : '—'}</Text>
