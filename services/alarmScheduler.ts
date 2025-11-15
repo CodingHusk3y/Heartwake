@@ -52,6 +52,15 @@ export async function scheduleForAlarm(alarm: Alarm): Promise<{ ids: string[]; n
   const ids: string[] = [];
   const deadlineContent = { title: alarm.label || 'Alarm', body: alarm.timeHHMM, sound: true as any, data: { alarmId: alarm.id, type: 'deadline' } } as Notifications.NotificationContentInput;
   const windowMins = Math.max(0, alarm.windowMinutes ?? 0);
+  const toCalendarTriggerFromDate = (date: Date): Notifications.NotificationTriggerInput => ({
+    type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+    hour: date.getHours(),
+    minute: date.getMinutes(),
+    second: date.getSeconds(),
+  });
   const addWindowStartReminder = async (trigger: Notifications.NotificationTriggerInput) => {
     if (!alarm.smartWake || windowMins <= 0) return;
     const id = await Notifications.scheduleNotificationAsync({
@@ -64,7 +73,13 @@ export async function scheduleForAlarm(alarm: Alarm): Promise<{ ids: string[]; n
     for (const d of alarm.repeat) {
       const id = await Notifications.scheduleNotificationAsync({
         content: deadlineContent,
-        trigger: { hour, minute, weekday: weekdayFromRepeatDay(d), repeats: true },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+          hour,
+          minute,
+          weekday: weekdayFromRepeatDay(d),
+          repeats: true,
+        },
       });
       ids.push(id);
       if (alarm.smartWake && windowMins > 0) {
@@ -75,14 +90,20 @@ export async function scheduleForAlarm(alarm: Alarm): Promise<{ ids: string[]; n
         }
         const winId = await Notifications.scheduleNotificationAsync({
           content: { title: 'Smart wake window', body: 'Window started — keep app open for early wake', sound: false as any, data: { alarmId: alarm.id, type: 'window-start' } },
-          trigger: { hour: hh, minute: mm, weekday: weekdayFromRepeatDay(weekday), repeats: true },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+            hour: hh,
+            minute: mm,
+            weekday: weekdayFromRepeatDay(weekday),
+            repeats: true,
+          },
         });
         ids.push(winId);
       }
     }
   } else {
     const fireDate = nextOccurrence(alarm.timeHHMM);
-    const id = await Notifications.scheduleNotificationAsync({ content: deadlineContent, trigger: fireDate });
+    const id = await Notifications.scheduleNotificationAsync({ content: deadlineContent, trigger: toCalendarTriggerFromDate(fireDate) });
     ids.push(id);
     if (alarm.smartWake && windowMins > 0) {
       const win = new Date(fireDate);
@@ -94,7 +115,7 @@ export async function scheduleForAlarm(alarm: Alarm): Promise<{ ids: string[]; n
         try {
           const winId = await Notifications.scheduleNotificationAsync({
             content: { title: 'Smart wake window', body: 'Window started — keep app open for early wake', sound: false as any, data: { alarmId: alarm.id, type: 'window-start' } },
-            trigger: win,
+            trigger: toCalendarTriggerFromDate(win),
           });
           ids.push(winId);
         } catch (e) {

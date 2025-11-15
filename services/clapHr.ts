@@ -18,36 +18,48 @@ export function getClapSensitivity() {
   return sensitivityMult;
 }
 
-async function tryLoadAudio(): Promise<any | null> {
+type AudioModule = { Audio: any; RecordingCtor: any };
+
+async function tryLoadAudio(): Promise<AudioModule | null> {
+  // Prefer expo-audio, but only if it provides a Recording implementation; otherwise fall back to expo-av
   try {
-    const A = await import('expo-audio');
-    return A;
+    const mod: any = await import('expo-audio');
+    const Audio = (mod && (mod.Audio || mod)) || null;
+    const RecordingCtor = (mod && (mod.Recording || (Audio && Audio.Recording))) || null;
+    if (Audio && RecordingCtor) return { Audio, RecordingCtor };
   } catch {}
   try {
-    const AV = await import('expo-av');
-    return AV;
+    const mod: any = await import('expo-av');
+    const Audio = mod && mod.Audio;
+    const RecordingCtor = (mod && (mod.Recording || (Audio && Audio.Recording))) || null;
+    if (Audio && RecordingCtor) return { Audio, RecordingCtor };
   } catch {}
   return null;
 }
 
+export async function isClapSupported(): Promise<boolean> {
+  const loaded = await tryLoadAudio();
+  return !!loaded;
+}
+
 export async function startClapHr(): Promise<boolean> {
   try {
-    const AudioMod: any = await tryLoadAudio();
-    if (!AudioMod) return false;
-    const Audio = AudioMod.Audio || AudioMod; // expo-audio may export Audio, or directly
-    const RecordingCtor = AudioMod.Recording || (Audio && Audio.Recording);
-    if (!Audio || !RecordingCtor) return false;
+    const loaded = await tryLoadAudio();
+    if (!loaded) return false;
+    const { Audio, RecordingCtor } = loaded;
     if (Audio.requestPermissionsAsync) {
-      await Audio.requestPermissionsAsync();
+      const perm = await Audio.requestPermissionsAsync();
+      const granted = perm?.granted === true || perm?.status === 'granted';
+      if (!granted) return false;
     }
     if (Audio.setAudioModeAsync) {
       await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true, staysActiveInBackground: false });
     }
     const rec = new RecordingCtor();
-    const AND = Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4 || AudioMod.Audio?.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4;
-    const AENC = Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC || AudioMod.Audio?.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC;
-    const IOS_FMT = Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_LINEARPCM || AudioMod.Audio?.RECORDING_OPTION_IOS_OUTPUT_FORMAT_LINEARPCM;
-    const IOS_QUAL = Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_LOW || AudioMod.Audio?.RECORDING_OPTION_IOS_AUDIO_QUALITY_LOW;
+    const AND = Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4;
+    const AENC = Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC;
+    const IOS_FMT = Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_LINEARPCM;
+    const IOS_QUAL = Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_LOW;
     await rec.prepareToRecordAsync({
       android: {
         extension: '.m4a', outputFormat: AND,

@@ -1,11 +1,11 @@
+import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Switch, Text, View } from 'react-native';
+import { Alert, Button, Platform, Switch, Text, View } from 'react-native';
 import LiveHrChart from '../../components/LiveHrChart';
-import NumberWheel from '../../components/NumberWheel';
 import { useSession } from '../../context/SessionContext';
 import { startWakeMonitoring, stopWakeMonitoring, updateStageForAlarm } from '../../services/alarm';
-import { getClapSensitivity, setClapSensitivity, startClapHr, stopClapHr, subscribeClapHr } from '../../services/clapHr';
+import { getClapSensitivity, isClapSupported, setClapSensitivity, startClapHr, stopClapHr, subscribeClapHr } from '../../services/clapHr';
 import { startHeartRateMock, stopHeartRateMock, subscribeHeartRate } from '../../services/heartRateMock';
 import { startMotion, stopMotion, subscribeMotion } from '../../services/sensors';
 import { inferStage } from '../../services/staging';
@@ -21,19 +21,17 @@ export default function LiveSession() {
   const motionRef = useRef<number | undefined>(undefined);
   const [useClap, setUseClap] = useState<boolean>(true);
   const [sensitivity, setSensitivity] = useState<number>(getClapSensitivity?.() ?? 3);
+  const [clapSupported, setClapSupported] = useState<boolean>(true);
 
   useEffect(() => {
     if (!config) return;
-    if (useClap) {
-      startClapHr();
-    } else {
-      startHeartRateMock();
-    }
     (async () => {
+      const supported = Platform.OS !== 'web' ? await isClapSupported() : false;
+      setClapSupported(supported);
       if (useClap) {
-        const ok = await startClapHr();
+        const ok = supported ? await startClapHr() : false;
         if (!ok) {
-          Alert.alert('Microphone unavailable', 'Clap mode needs the microphone permission and expo-av package. Falling back to mock HR.');
+          Alert.alert('Microphone unavailable', 'Clap mode needs microphone permission (expo-audio). Please grant access in Settings. Falling back to mock HR.');
           setUseClap(false);
           startHeartRateMock();
         }
@@ -89,19 +87,30 @@ export default function LiveSession() {
       <Text style={{ color: '#ffffff' }}>Heart Rate: {hr ? hr.toFixed(0) : '—'} bpm</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Text style={{ color: '#9aa0c0' }}>Clap mode</Text>
-        <Switch value={useClap} onValueChange={setUseClap} />
+        <Switch value={useClap} onValueChange={setUseClap} disabled={!clapSupported} />
       </View>
-      {useClap && (
+      {!clapSupported && (
+        <Text style={{ color: '#9aa0c0' }}>
+          {Platform.OS === 'web' ? 'Not supported on web.' : 'Audio recording not available; check microphone permissions.'}
+        </Text>
+      )}
+      {useClap && clapSupported && (
         <View style={{ marginTop: 4 }}>
           <Text style={{ color: '#9aa0c0', marginBottom: 6 }}>Sensitivity (x{sensitivity})</Text>
-          <NumberWheel
-            value={sensitivity}
-            onChange={(v) => { setSensitivity(v); setClapSensitivity(v); }}
-            min={2}
-            max={6}
+          <Slider
+            minimumValue={2}
+            maximumValue={6}
             step={1}
-            labelSuffix="x"
+            value={sensitivity}
+            onValueChange={(v: number) => { setSensitivity(v); setClapSensitivity(v); }}
+            minimumTrackTintColor="#4a90e2"
+            maximumTrackTintColor="#555555"
+            thumbTintColor="#ffffff"
           />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ color: '#9aa0c0' }}>2x</Text>
+            <Text style={{ color: '#9aa0c0' }}>6x</Text>
+          </View>
         </View>
       )}
       <LiveHrChart data={hrSeries} />

@@ -6,7 +6,13 @@ let monitorTimer: any;
 let currentStage: string = 'unknown';
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowAlert: true, shouldPlaySound: true, shouldSetBadge: false })
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true
+  })
 });
 
 async function fireEarlyWake(stage: string) {
