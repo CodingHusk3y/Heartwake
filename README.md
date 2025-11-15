@@ -1,8 +1,8 @@
-# Welcome to your Expo app 👋
+# HeartWake – Smart Wake Alarm (Expo Demo)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+HeartWake is an experimental smart alarm that aims to trigger wake-up during a light sleep phase within a user-defined window before their latest acceptable wake time. It uses (mocked for now) heart rate and motion signals to heuristically infer sleep stage transitions and choose an earlier, more refreshing wake moment.
 
-## Get started
+## Get Started
 
 1. Install dependencies
 
@@ -35,7 +35,23 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+## Project Structure (Custom Additions)
+
+- `services/` sensor, staging (sleep phase inference), alarm scheduling, storage, mock heart rate.
+- `context/SessionContext.tsx` global session config + state machine.
+- `app/sleep/` screens for setup, live session, and history.
+
+## Roadmap (MVP)
+1. Mock HR + accelerometer, heuristic staging, early alarm.
+2. Persist sessions + user wake quality rating.
+3. Add basic personalization of wake window.
+4. Integrate real wearable HR (native module) or imported data.
+5. Optional on-device ML (TF.js) small classifier.
+
+## Disclaimer
+Not medical advice. Sleep stage inference here is approximate and for wellness experimentation only. All data stored locally.
+
+## Learn More
 
 To learn more about developing your project with Expo, look at the following resources:
 

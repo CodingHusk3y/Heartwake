@@ -1,0 +1,45 @@
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Button, Text, View } from 'react-native';
+import { listSessions, rateSession, StoredSession } from '../../services/storage';
+
+export default function RateWake() {
+  const router = useRouter();
+  const [session, setSession] = useState<StoredSession | undefined>();
+  useEffect(() => {
+    listSessions().then(s => {
+      const first = s[0];
+      if (first && first.rating === undefined) setSession(first);
+    });
+  }, []);
+
+  async function rate(value: number) {
+    if (session) {
+      await rateSession(session.id, value);
+      router.push('/');
+    } else {
+      router.push('/');
+    }
+  }
+
+  return (
+    <View style={{ flex: 1, padding: 16, gap: 16 }}>
+      <Text style={{ fontSize: 20, fontWeight: '600' }}>Wake Quality Rating</Text>
+      {session ? (
+        <>
+          <Text>Wake Time: {session.wakeTime ? new Date(session.wakeTime).toLocaleTimeString() : '—'}</Text>
+          <Text>Early Wake: {session.early ? 'Yes' : 'No'}</Text>
+          <Text>Select Rating (1=poor,5=great):</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {[1,2,3,4,5].map(v => (
+              <Button key={v} title={String(v)} onPress={() => rate(v)} />
+            ))}
+          </View>
+        </>
+      ) : (
+        <Text>No unrated session found.</Text>
+      )}
+      <Button title="Skip" onPress={() => router.push('/')} />
+    </View>
+  );
+}
