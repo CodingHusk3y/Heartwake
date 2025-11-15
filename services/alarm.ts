@@ -15,9 +15,9 @@ Notifications.setNotificationHandler({
   })
 });
 
-async function fireEarlyWake(stage: string) {
+async function fireEarlyWake(stage: string, alarmId?: string) {
   await Notifications.scheduleNotificationAsync({
-    content: { title: 'HeartWake', body: `Waking during light stage (${stage})`, sound: true, data: { type: 'early' } },
+    content: { title: 'HeartWake', body: `Waking during light stage (${stage})`, sound: true, data: { type: 'early', alarmId } },
     trigger: null
   });
 }
@@ -32,7 +32,7 @@ export function startWakeMonitoring(cfg: SleepSessionConfig, onWake: (info: { st
       if (currentStage === 'N1' || currentStage === 'N2' || currentStage === 'REM') {
         clearInterval(monitorTimer);
         monitorTimer = undefined;
-        await fireEarlyWake(currentStage);
+        await fireEarlyWake(currentStage, cfg.alarmId);
         const wakeTime = new Date().toISOString();
         const minutesEarly = Math.max(0, Math.ceil((target - now) / 60000));
         await saveSession(cfg, wakeTime, true, minutesEarly);
@@ -42,7 +42,7 @@ export function startWakeMonitoring(cfg: SleepSessionConfig, onWake: (info: { st
       clearInterval(monitorTimer);
       monitorTimer = undefined;
       await Notifications.scheduleNotificationAsync({
-        content: { title: 'HeartWake', body: 'Wake deadline reached', sound: true, data: { type: 'deadline' } },
+        content: { title: 'HeartWake', body: 'Wake deadline reached', sound: true, data: { type: 'deadline', alarmId: cfg.alarmId } },
         trigger: null
       });
       const wakeTime = new Date().toISOString();

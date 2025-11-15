@@ -19,12 +19,22 @@ export default function AlarmsScreen() {
   useEffect(() => { ensureNotificationPermission().then(() => {}); }, []);
   useEffect(() => {
     const sub1 = Notifications.addNotificationReceivedListener(async n => {
-      const type = (n.request.content.data as any)?.type;
-      if (type === 'deadline') { await cleanupExpiredOneTime(); load(); }
+      const data = (n.request.content.data as any) || {};
+      const type = data?.type;
+      if (type === 'deadline') {
+        if (data.alarmId) { try { await deleteAlarm(data.alarmId); } catch {} }
+        await cleanupExpiredOneTime();
+        load();
+      }
     });
     const sub2 = Notifications.addNotificationResponseReceivedListener(async r => {
-      const type = (r.notification.request.content.data as any)?.type;
-      if (type === 'deadline') { await cleanupExpiredOneTime(); load(); }
+      const data = (r.notification.request.content.data as any) || {};
+      const type = data?.type;
+      if (type === 'deadline') {
+        if (data.alarmId) { try { await deleteAlarm(data.alarmId); } catch {} }
+        await cleanupExpiredOneTime();
+        load();
+      }
     });
     return () => { sub1.remove(); sub2.remove(); };
   }, [load]);
@@ -95,7 +105,7 @@ function AlarmRow({ alarm, onChanged, onPress }: { alarm: Alarm; onChanged: () =
   function startSleep() {
     const targetTime = computeNextTargetISO(alarm);
     const windowMinutes = alarm.windowMinutes ?? 30;
-    setConfig({ targetTime, windowMinutes });
+    setConfig({ targetTime, windowMinutes, alarmId: alarm.id });
     updateState({ active: true, startedAt: new Date().toISOString() });
     router.push('/sleep/live');
   }

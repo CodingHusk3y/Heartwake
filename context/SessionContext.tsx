@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useState } from 'react';
 export type SleepSessionConfig = {
   targetTime: string; // ISO string of latest wake time
   windowMinutes: number; // minutes before target to begin early wake window
+  alarmId?: string; // source alarm id for cleanup
 };
 
 export type SleepSessionState = {
