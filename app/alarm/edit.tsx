@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Alert, Button, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 import NumberWheel from '../../components/NumberWheel';
 import TimeWheel from '../../components/TimeWheel';
@@ -19,6 +19,12 @@ export default function EditAlarm() {
   const [sound, setSound] = useState('default');
   const [smartWake, setSmartWake] = useState<boolean>(true);
   const [windowMinutes, setWindowMinutes] = useState<number>(30);
+  const remainingMins = useMemo(() => {
+    try {
+      const next = computeNextOccurrenceDate(time, repeat);
+      return Math.max(0, Math.ceil((next.getTime() - Date.now()) / 60000));
+    } catch { return undefined; }
+  }, [time, repeat]);
 
   useEffect(() => {
     if (id) {
@@ -79,6 +85,11 @@ export default function EditAlarm() {
       </View>
       <Text style={{ color: '#ffffff' }}>Wake Window</Text>
       <NumberWheel value={windowMinutes} onChange={setWindowMinutes} min={0} max={120} step={5} />
+      {smartWake && remainingMins !== undefined && windowMinutes > remainingMins && (
+        <Text style={{ color: '#e24a4a' }}>
+          Wake window exceeds remaining time ({remainingMins} min left). Reduce the window or set a later time.
+        </Text>
+      )}
       <Button title={id ? 'Save' : 'Add'} onPress={save} />
       <View style={{ height: 8 }} />
     </ScrollView>

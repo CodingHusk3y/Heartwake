@@ -120,7 +120,17 @@ function AlarmRow({ alarm, onChanged, onPress }: { alarm: Alarm; onChanged: () =
             {(alarm.label || 'Alarm')} · {summarizeRepeat(alarm.repeat)}{alarm.smartWake ? ` · Smart wake ${alarm.windowMinutes ?? 30}m` : ''}
           </Text>
         </View>
-        <Switch value={alarm.enabled} onValueChange={async (v) => { await toggleAlarm(alarm.id, v); await rescheduleAlarm(alarm.id); onChanged(); }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={(e) => { e.stopPropagation(); startSleep(); }}
+            style={styles.startPill}
+          >
+            <Ionicons name="moon" size={16} color="#fff" />
+            <Text style={{ color: '#fff', marginLeft: 6 }}>Start</Text>
+          </Pressable>
+          <Switch value={alarm.enabled} onValueChange={async (v) => { await toggleAlarm(alarm.id, v); await rescheduleAlarm(alarm.id); onChanged(); }} />
+        </View>
       </Pressable>
     </Swipeable>
   );
@@ -141,4 +151,5 @@ const styles = StyleSheet.create({
   meta: { color: '#9aa0c0', marginTop: 2 },
   delete: { backgroundColor: '#e24a4a', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, flexDirection: 'row' },
   start: { backgroundColor: '#4a90e2', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, flexDirection: 'row' },
+  startPill: { backgroundColor: '#4a90e2', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 14, flexDirection: 'row', alignItems: 'center' },
 });

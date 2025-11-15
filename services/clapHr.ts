@@ -1,28 +1,29 @@
-import { Audio, Recording } from 'expo-av';
-
 export type HrSample = { hr: number };
 
 type Subscriber = (s: HrSample) => void;
 let subs: Subscriber[] = [];
-let recording: Recording | null = null;
+let recording: any = null;
 let pollTimer: any = null;
 let lastBeat = 0;
 let smoothedHr: number | undefined;
+let baselineAmp = 0.05; // rolling baseline of ambient loudness (0..1)
 
-export async function startClapHr() {
+export async function startClapHr(): Promise<boolean> {
   try {
+    const ExpoAV: any = await import('expo-av');
+    const { Audio, Recording } = ExpoAV;
     await Audio.requestPermissionsAsync();
     await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true, staysActiveInBackground: false });
     const rec = new Recording();
     await rec.prepareToRecordAsync({
       android: {
-        extension: '.m4a', outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4,
-        audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC, sampleRate: 44100, numberOfChannels: 1,
+        extension: '.m4a', outputFormat: ExpoAV.Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4,
+        audioEncoder: ExpoAV.Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC, sampleRate: 44100, numberOfChannels: 1,
         bitRate: 128000,
       },
       ios: {
-        extension: '.caf', outputFormat: Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_LINEARPCM,
-        audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_LOW,
+        extension: '.caf', outputFormat: ExpoAV.Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_LINEARPCM,
+        audioQuality: ExpoAV.Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_LOW,
         sampleRate: 44100, numberOfChannels: 1, bitRate: 128000,
         linearPCMBitDepth: 16, linearPCMIsBigEndian: false, linearPCMIsFloat: false,
       },
@@ -31,8 +32,9 @@ export async function startClapHr() {
     await rec.startAsync();
     recording = rec;
     startPolling();
+    return true;
   } catch (e) {
-    // ignore; subscribers just won't get data
+    return false;
   }
 }
 
@@ -59,13 +61,14 @@ function startPolling() {
     if (!recording) return;
     try {
       const status: any = await recording.getStatusAsync();
-      // iOS provides metering in dBFS (negative numbers). Android may not.
       const metering = typeof status.metering === 'number' ? status.metering : -160;
-      const amp = Math.pow(10, metering / 20); // 0..1 approx
-      const threshold = 0.4; // tune for claps
+      const amp = Math.max(0, Math.min(1, Math.pow(10, metering / 20)));
+      // Update baseline when not spiking
+      const isSpike = amp > baselineAmp * 3 && amp > 0.1;
+      baselineAmp = isSpike ? baselineAmp : baselineAmp * 0.98 + amp * 0.02;
       const now = Date.now();
-      if (amp > threshold) {
-        if (now - lastBeat > 300) { // min 300ms between beats (~200 bpm)
+      if (isSpike) {
+        if (now - lastBeat > 300) {
           if (lastBeat > 0) {
             const bpm = Math.max(40, Math.min(200, 60000 / (now - lastBeat)));
             smoothedHr = smoothedHr === undefined ? bpm : smoothedHr * 0.7 + bpm * 0.3;

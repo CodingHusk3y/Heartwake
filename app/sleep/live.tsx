@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Text, View, Switch } from 'react-native';
+import { Alert, Button, Switch, Text, View } from 'react-native';
 import LiveHrChart from '../../components/LiveHrChart';
 import { useSession } from '../../context/SessionContext';
 import { startWakeMonitoring, stopWakeMonitoring, updateStageForAlarm } from '../../services/alarm';
-import { startHeartRateMock, stopHeartRateMock, subscribeHeartRate } from '../../services/heartRateMock';
 import { startClapHr, stopClapHr, subscribeClapHr } from '../../services/clapHr';
+import { startHeartRateMock, stopHeartRateMock, subscribeHeartRate } from '../../services/heartRateMock';
 import { startMotion, stopMotion, subscribeMotion } from '../../services/sensors';
 import { inferStage } from '../../services/staging';
 
@@ -27,6 +27,18 @@ export default function LiveSession() {
     } else {
       startHeartRateMock();
     }
+    (async () => {
+      if (useClap) {
+        const ok = await startClapHr();
+        if (!ok) {
+          Alert.alert('Microphone unavailable', 'Clap mode needs the microphone permission and expo-av package. Falling back to mock HR.');
+          setUseClap(false);
+          startHeartRateMock();
+        }
+      } else {
+        startHeartRateMock();
+      }
+    })();
     startMotion();
     const hrUnsub = (useClap ? subscribeClapHr : subscribeHeartRate)((sample: any) => {
       hrRef.current = sample.hr;
