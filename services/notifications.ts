@@ -32,7 +32,7 @@ async function handleNotificationEvent(notification: Notifications.Notification)
   const type = data?.type;
   const alarmId = data?.alarmId as string | undefined;
   if (!alarmId) return;
-  if (type === 'deadline') {
+  if (type === 'deadline' || type === 'early') {
     const list = await listAlarms();
     const alarm = list.find(a => a.id === alarmId);
     if (alarm && (!alarm.repeat || alarm.repeat.length === 0)) {

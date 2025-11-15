@@ -4,6 +4,7 @@ export type SleepSessionConfig = {
   targetTime: string; // ISO string of latest wake time
   windowMinutes: number; // minutes before target to begin early wake window
   alarmId?: string; // source alarm id for cleanup
+  startedAt?: string; // session start time for duration
 };
 
 export type SleepSessionState = {

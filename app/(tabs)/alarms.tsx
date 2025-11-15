@@ -21,7 +21,7 @@ export default function AlarmsScreen() {
     const sub1 = Notifications.addNotificationReceivedListener(async n => {
       const data = (n.request.content.data as any) || {};
       const type = data?.type;
-      if (type === 'deadline') {
+      if (type === 'deadline' || type === 'early') {
         if (data.alarmId) { try { await deleteAlarm(data.alarmId); } catch {} }
         await cleanupExpiredOneTime();
         load();
@@ -30,7 +30,7 @@ export default function AlarmsScreen() {
     const sub2 = Notifications.addNotificationResponseReceivedListener(async r => {
       const data = (r.notification.request.content.data as any) || {};
       const type = data?.type;
-      if (type === 'deadline') {
+      if (type === 'deadline' || type === 'early') {
         if (data.alarmId) { try { await deleteAlarm(data.alarmId); } catch {} }
         await cleanupExpiredOneTime();
         load();
@@ -105,7 +105,8 @@ function AlarmRow({ alarm, onChanged, onPress }: { alarm: Alarm; onChanged: () =
   function startSleep() {
     const targetTime = computeNextTargetISO(alarm);
     const windowMinutes = alarm.windowMinutes ?? 30;
-    setConfig({ targetTime, windowMinutes, alarmId: alarm.id });
+    const startedAt = new Date().toISOString();
+    setConfig({ targetTime, windowMinutes, alarmId: alarm.id, startedAt });
     updateState({ active: true, startedAt: new Date().toISOString() });
     router.push('/sleep/live');
   }

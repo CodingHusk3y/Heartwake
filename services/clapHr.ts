@@ -6,12 +6,12 @@ let recording: any = null;
 let pollTimer: any = null;
 let lastBeat = 0;
 let smoothedHr: number | undefined;
-let baselineAmp = 0.05; // rolling baseline of ambient loudness (0..1)
-let sensitivityMult = 3; // spike must exceed baseline * sensitivity
-let minAmpFloor = 0.1; // absolute minimum amplitude to consider
+let baselineAmp = 0.03; // rolling baseline of ambient loudness (0..1)
+let sensitivityMult = 2; // spike must exceed baseline * sensitivity
+let minAmpFloor = 0.02; // absolute minimum amplitude to consider
 
 export function setClapSensitivity(mult: number) {
-  sensitivityMult = Math.max(1.5, Math.min(8, mult));
+  sensitivityMult = Math.max(1, Math.min(8, mult));
 }
 
 export function getClapSensitivity() {

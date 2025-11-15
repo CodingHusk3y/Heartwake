@@ -71,8 +71,8 @@ export default function LiveSession() {
   }, [config, useClap]);
 
   function updateStage(hrVal?: number, motion?: number) {
-    if (hrVal === undefined || motion === undefined) return;
-    const s = inferStage({ hr: hrVal, movementMagnitude: motion });
+    if (hrVal === undefined) return;
+    const s = inferStage({ hr: hrVal, movementMagnitude: motion ?? 0 });
     setStage(s);
     updateState({ stage: s });
     updateStageForAlarm(s);

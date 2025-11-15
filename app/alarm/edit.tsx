@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { Alert, Button, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 import NumberWheel from '../../components/NumberWheel';
 import TimeWheel from '../../components/TimeWheel';
 import { rescheduleAlarm } from '../../services/alarmScheduler';
@@ -84,13 +84,17 @@ export default function EditAlarm() {
         <Switch value={smartWake} onValueChange={setSmartWake} />
       </View>
       <Text style={{ color: '#ffffff' }}>Wake Window</Text>
-      <NumberWheel value={windowMinutes} onChange={setWindowMinutes} min={0} max={120} step={5} />
+      <View style={{ alignItems: 'center' }}>
+        <NumberWheel value={windowMinutes} onChange={setWindowMinutes} min={0} max={60} step={1} />
+      </View>
       {smartWake && remainingMins !== undefined && windowMinutes > remainingMins && (
         <Text style={{ color: '#e24a4a' }}>
           Wake window exceeds remaining time ({remainingMins} min left). Reduce the window or set a later time.
         </Text>
       )}
-      <Button title={id ? 'Save' : 'Add'} onPress={save} />
+      <Pressable onPress={save} style={{ alignSelf: 'center', marginTop: 4, paddingVertical: 10, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: '#4a90e2', backgroundColor: 'transparent' }}>
+        <Text style={{ color: '#4a90e2', fontWeight: '600' }}>{id ? 'Save' : 'Add'}</Text>
+      </Pressable>
       <View style={{ height: 8 }} />
     </ScrollView>
   );
