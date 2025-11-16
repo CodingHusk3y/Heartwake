@@ -97,8 +97,5 @@ All data (alarms, sessions) saved into database. Not medical advice.
 ## Contributing
 Open issues for bugs or feature requests; keep additions lightweight and privacy‑respecting.
 
-## License
-MIT (adjust if needed).
-
 ---
 Sleep stage detection is heuristic and not a medical diagnostic tool. Use for wellness experimentation only.
