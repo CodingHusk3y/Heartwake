@@ -92,7 +92,7 @@ services/
 ```
 
 ## Data & Privacy
-All data (alarms, sessions) saved locally via AsyncStorage. No external transmission. Not medical advice.
+All data (alarms, sessions) saved into database. Not medical advice.
 
 ## Contributing
 Open issues for bugs or feature requests; keep additions lightweight and privacy‑respecting.
