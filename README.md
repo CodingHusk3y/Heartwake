@@ -2,7 +2,7 @@
 
 <img width="250" height="250" alt="ChatGPT Image Nov 16, 2025, 03_14_02 AM" src="https://github.com/user-attachments/assets/6271f182-416b-416f-abc9-79dc73ca70bb" />
 
-A dark, sleep‑friendly smart alarm that aims to wake you during lighter sleep—trading a few minutes of time for less grogginess.
+A heart rate smart alarm that aims to wake you during lighter sleep—trading a few minutes of time for less grogginess.
 
 ## Inspiration
 Waking at the same time can still feel rough if you emerge from deep (N3) sleep. Light stages (late N2 / post‑REM) reduce sleep inertia. Heartwake explores simple, privacy‑first heuristics to pick a better wake moment without requiring a wearable.
